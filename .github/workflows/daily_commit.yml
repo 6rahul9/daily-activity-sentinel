@@ -5,27 +5,28 @@ on:
     - cron: '30 18 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_PAT }}
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Run Autocommit Script
         run: python autocommit.py
 
       - name: Commit and Push changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add daily_logs.md
-          git commit -m "Sentinel Daily Update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git diff --cached --quiet || git commit -m "Sentinel Daily Update: $(date +'%Y-%m-%d')"
           git push
