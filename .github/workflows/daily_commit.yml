@@ -2,7 +2,7 @@ name: Daily Sentinel Commit
 
 on:
   schedule:
-    - cron: '30 18 * * *'
+    - cron: '30 18 * * *'  # 12:00 AM IST approx
   workflow_dispatch:
 
 permissions:
@@ -11,9 +11,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0   # IMPORTANT: prevents push rejection issues
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -25,11 +29,21 @@ jobs:
 
       - name: Commit and Push changes
         run: |
-          - name: Commit and Push changes
-  run: |
-    git config user.name "Rahul Mohuture"
-    git config user.email "6rahul9@users.noreply.github.com"
-    git add daily_logs.md
-    git diff --cached --quiet || git commit -m "Sentinel Daily Update: $(date +'%Y-%m-%d')"
-    git pull origin main --rebase
-    git push origin main
+          git config user.name "Rahul Mohuture"
+          git config user.email "6rahul9@users.noreply.github.com"
+
+          git add daily_logs.md
+
+          # Only commit if changes exist
+          if ! git diff --cached --quiet; then
+            git commit -m "Sentinel Daily Update: $(date +'%Y-%m-%d')"
+          else
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # Pull latest changes safely
+          git pull origin main --rebase
+
+          # Push changes
+          git push origin main
